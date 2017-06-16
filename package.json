@@ -6,7 +6,7 @@
     "id": "cordova-plugin-android-file-chooser",
     "platforms": [
       "android"
-    ],
+    ]
   },
   "description": "Cordova Plugin that supplies a File Chooser",
   "license": "Apache License, Version 2.0",
