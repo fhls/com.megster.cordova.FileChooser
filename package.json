@@ -1,9 +1,9 @@
 {
   "version": "1.0.0",
-  "name": "cordova-plugin-android-file-chooser",
+  "name": "cordova-filechooser",
   "author": "don.coleman@gmail.com",
   "cordova": {
-    "id": "cordova-plugin-android-file-chooser",
+    "id": "cordova-filechooser",
     "platforms": [
       "android"
     ]
