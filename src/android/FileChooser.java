@@ -90,146 +90,154 @@ public class FileChooser extends CordovaPlugin {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == PICK_FILE_REQUEST && callback != null) {
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == PICK_FILE_REQUEST && callback != null) {
 			// When pick one file
-            if (resultCode == Activity.RESULT_OK) {
+			if (resultCode == Activity.RESULT_OK) {
 
-                Uri uri = data.getData();
+				Uri uri = data.getData();
 
-                if (uri != null) {
+				if (uri != null) {
 
-                    Log.w(TAG, uri.toString());
+					Log.w(TAG, uri.toString());
 
-                    try {
-                        Context context = cordova.getActivity();
-                        String mimeType = context.getContentResolver().getType(uri);
-                        String filename = "";
+					try {
+						Context context = cordova.getActivity();
+						String mimeType = context.getContentResolver().getType(uri);
+						String filename = "";
 
-                        if (mimeType == null) {
-                            String path = getPath(context, uri);
-                            if (path == null) {
-                                filename = getName(uri.toString());
-                            } else {
-                                File file = new File(path);
-                                filename = file.getName();
-                            }
-                        } else {
-                            Cursor returnCursor = context.getContentResolver().query(uri, null, null, null, null);
-                            int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                            int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
-                            returnCursor.moveToFirst();
-                            filename = returnCursor.getString(nameIndex);
-                            String size = Long.toString(returnCursor.getLong(sizeIndex));
-                        }
+						if (mimeType == null) {
+							String path = getPath(context, uri);
+							if (path == null) {
+								filename = getName(uri.toString());
+							} else {
+								File file = new File(path);
+								filename = file.getName();
+							}
+						} else {
+							Cursor returnCursor = context.getContentResolver().query(uri, null, null, null, null);
+							int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+							int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+							returnCursor.moveToFirst();
+							filename = returnCursor.getString(nameIndex);
+							String size = Long.toString(returnCursor.getLong(sizeIndex));
+						}
 
-                        //File fileSave = context.getExternalFilesDir(null);
-                        String sourcePath = context.getExternalFilesDir(null).toString();
+						//File fileSave = context.getExternalFilesDir(null);
+						String sourcePath = context.getExternalFilesDir(null).toString();
 
-                        try {
+						try {
 
-                            File savedFile = new File(sourcePath + "/" + filename);
+							File savedFile = new File(sourcePath + "/" + filename);
 
-                            copyFileStream(savedFile, uri, context);
+							copyFileStream(savedFile, uri, context);
 
-                            callback.success(savedFile.toURI().toString());
+							callback.success(savedFile.toURI().toString());
 
-                        } catch (Exception e) {
-                            Log.w(TAG, e.getMessage());
-                        }
-                    } catch (Exception e) {
-                        Log.w(TAG, e.getMessage());
-                    }
-                }
-            } else {
-                callback.error("File uri was null");
-            }
-        } else if (requestCode == PICK_FILES_REQUEST && callback != null) {
-			// When pick multiple files
-            if (resultCode == Activity.RESULT_OK) {
-
-                ClipData clipData = data.getClipData(); 
-				
-				if (clipData != null) {  
-
-					final int clipDataCount = clipData.getItemCount();
-
-					if(clipDataCount>0) {
-                        JSONArray savedUris = new JSONArray();
-
-                        for (int i = 0; i < clipDataCount; i++) {
-                            ClipData.Item item = clipData.getItemAt(i);
-                            Uri uri = item.getUri();
-
-                            if (uri != null) {
-
-                                Log.w(TAG, uri.toString());
-
-                                try {
-                                    Context context = cordova.getActivity();
-                                    String mimeType = context.getContentResolver().getType(uri);
-                                    String filename = "";
-
-                                    if (mimeType == null) {
-                                        String path = getPath(context, uri);
-                                        if (path == null) {
-                                            filename = getName(uri.toString());
-                                        } else {
-                                            File file = new File(path);
-                                            filename = file.getName();
-                                        }
-                                    } else {
-                                        Cursor returnCursor = context.getContentResolver().query(uri, null, null, null, null);
-                                        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                                        int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
-                                        returnCursor.moveToFirst();
-                                        filename = returnCursor.getString(nameIndex);
-                                        String size = Long.toString(returnCursor.getLong(sizeIndex));
-                                    }
-
-                                    //File fileSave = context.getExternalFilesDir(null);
-                                    String sourcePath = context.getExternalFilesDir(null).toString();
-
-                                    try {
-
-                                        File savedFile = new File(sourcePath + "/" + filename);
-
-                                        copyFileStream(savedFile, uri, context);
-
-                                        savedUris.put(savedFile.toURI().toString());
-
-                                    } catch (Exception e) {
-                                        Log.w(TAG, e.getMessage());
-                                    }
-
-                                } catch (Exception e) {
-                                    Log.w(TAG, e.getMessage());
-                                }
-
-                            }
-                        }
-
-                        String json = savedUris.toString();
-
-                        callback.success(json);
-                    } else {
-                        callback.error("User didn't pick any files");
-                    }
+						} catch (Exception e) {
+							Log.w(TAG, e.getMessage());
+						}
+					} catch (Exception e) {
+						Log.w(TAG, e.getMessage());
+					}
 				}
-            } else {
-                callback.error("File uri was null");
-            }
+			} else {
+				callback.error("File uri was null");
+			}
+		} else if (requestCode == PICK_FILES_REQUEST && callback != null) {
+			// When pick multiple files
+			if (resultCode == Activity.RESULT_OK) {
+				Uri[] Uris = new Uri[0];
+
+				ClipData clipData = data.getClipData();
+				Uri uriData = data.getData();
+
+				if (clipData != null && clipData.getItemCount() > 0) {
+					Uris = new Uri[clipData.getItemCount()];
+
+					for (int i = 0; i < clipData.getItemCount(); i++) {
+						ClipData.Item item = clipData.getItemAt(i);
+
+						Uris[i] = item.getUri();
+					}
+				} else if (uriData != null) {
+					Uris = new Uri[1];
+
+					Uris[0] = uriData;
+				} else {
+					callback.error("User didn't pick any files");
+				}
+
+				JSONArray savedUris = new JSONArray();
+
+				for (int i = 0; i < Uris.length; i++) {
+					Uri uri = Uris[i];
+
+					if (uri != null) {
+
+						Log.w(TAG, uri.toString());
+
+						try {
+							Context context = cordova.getActivity();
+							String mimeType = context.getContentResolver().getType(uri);
+							String filename = "";
+
+							if (mimeType == null) {
+								String path = getPath(context, uri);
+								if (path == null) {
+									filename = getName(uri.toString());
+								} else {
+									File file = new File(path);
+									filename = file.getName();
+								}
+							} else {
+								Cursor returnCursor = context.getContentResolver().query(uri, null, null, null, null);
+								int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+								int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+								returnCursor.moveToFirst();
+								filename = returnCursor.getString(nameIndex);
+								String size = Long.toString(returnCursor.getLong(sizeIndex));
+							}
+
+							//File fileSave = context.getExternalFilesDir(null);
+							String sourcePath = context.getExternalFilesDir(null).toString();
+
+							try {
+
+								File savedFile = new File(sourcePath + "/" + filename);
+
+								copyFileStream(savedFile, uri, context);
+
+								savedUris.put(savedFile.toURI().toString());
+
+							} catch (Exception e) {
+								Log.w(TAG, e.getMessage());
+							}
+
+						} catch (Exception e) {
+							Log.w(TAG, e.getMessage());
+						}
+
+					}
+				}
+
+				String json = savedUris.toString();
+
+				callback.success(json);
+			} else {
+				callback.error("File uri was null");
+			}
 		} else if (resultCode == Activity.RESULT_CANCELED) {
 
-            // TODO NO_RESULT or error callback?
-            PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
-            callback.sendPluginResult(pluginResult);
+			// TODO NO_RESULT or error callback?
+			PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
+			callback.sendPluginResult(pluginResult);
 
-        } else {
+		} else {
 
-            callback.error(resultCode);
-        }
-    }
+			callback.error(resultCode);
+		}
+	}
 
     public static int indexOfLastSeparator(String filename) {
         if (filename == null) {
